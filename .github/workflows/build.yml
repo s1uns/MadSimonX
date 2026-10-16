@@ -25,19 +25,37 @@ jobs:
           }
           "path=$($file.FullName)" >> $env:GITHUB_OUTPUT
 
-      - name: Build Release x86
+
+      - name: Build MadSimonX
         shell: pwsh
         run: |
           $vswhere = "${env:ProgramFiles(x86)}\Microsoft Visual Studio\Installer\vswhere.exe"
           $msbuild = & $vswhere -latest -requires Microsoft.Component.MSBuild -find "MSBuild\**\Bin\MSBuild.exe" |
             Select-Object -First 1
-          if (-not $msbuild) {
-            throw "MSBuild not found"
+
+          $solution = "${{ steps.project.outputs.path }}"
+
+          Write-Host "Available configurations:"
+          $inside = $false
+          foreach ($line in Get-Content $solution) {
+            if ($line -match 'GlobalSection\(SolutionConfigurationPlatforms\)') {
+              $inside = $true
+              continue
+            }
+            if ($inside -and $line -match 'EndGlobalSection') {
+              break
+            }
+            if ($inside) {
+              Write-Host $line
+            }
           }
-          & $msbuild "${{ steps.project.outputs.path }}" /m /p:Configuration=Release /p:Platform=Win32
+
+          Write-Host "Building default configuration..."
+          & $msbuild $solution /m
           if ($LASTEXITCODE -ne 0) {
             exit $LASTEXITCODE
           }
+
 
       - name: Upload DLL
         uses: actions/upload-artifact@v4
