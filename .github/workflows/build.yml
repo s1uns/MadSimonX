@@ -57,12 +57,10 @@ jobs:
           }
 
 
+  
       - name: Upload DLL
         uses: actions/upload-artifact@v4
         with:
           name: MadSimonX-DLL
-          path: |
-            **/Release/*.dll
-            **/Release/**/*.dll
-            **/x86/Release/*.dll
+          path: msvc/bin/Debug/Win32/CrashRpt.dll
           if-no-files-found: error
